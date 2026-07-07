@@ -114,17 +114,19 @@ struct ContentView: View {
             }
         }
         .background {
-            Group {
-                checkpointsShortcutButton
-                historyShortcutButton
-                exportPDFShortcutButton
-                shareDataShortcutButton
-                importDataShortcutButton
-                assistantShortcutButton
-                settingsShortcutButton
+            if !showAssistant {
+                Group {
+                    checkpointsShortcutButton
+                    historyShortcutButton
+                    exportPDFShortcutButton
+                    shareDataShortcutButton
+                    importDataShortcutButton
+                    assistantShortcutButton
+                    settingsShortcutButton
+                }
+                .frame(width: 0, height: 0)
+                .opacity(0)
             }
-            .frame(width: 0, height: 0)
-            .opacity(0)
         }
     }
 

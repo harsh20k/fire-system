@@ -70,6 +70,6 @@ struct PortfolioPathChart: View {
                 }
             }
         }
-        .frame(minHeight: 180)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

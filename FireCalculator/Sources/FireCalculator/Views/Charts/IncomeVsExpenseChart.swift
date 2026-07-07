@@ -61,7 +61,7 @@ struct IncomeVsExpenseChart: View {
             }
         }
         .chartLegend(position: .bottom)
-        .frame(minHeight: 180)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -92,7 +92,7 @@ struct PensionBridgeChart: View {
     var body: some View {
         if results.fireAge == nil {
             BrutalText(text: "Reach FIRE within the 60-year horizon to preview the pension bridge.", variant: .body, color: Theme.mutedText(scheme))
-                .frame(minHeight: 160)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             Chart {
                 ForEach(rows) { row in
@@ -141,7 +141,7 @@ struct PensionBridgeChart: View {
                 }
             }
             .chartLegend(position: .bottom)
-            .frame(minHeight: 180)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }

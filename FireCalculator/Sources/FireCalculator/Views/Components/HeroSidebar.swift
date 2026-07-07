@@ -13,16 +13,7 @@ struct HeroSidebar: View {
         let savingsRate = savingsRatePercent(r)
 
         VStack(alignment: .leading, spacing: Theme.Spacing.inline) {
-            VStack(alignment: .leading, spacing: 6) {
-                BrutalText(
-                    text: Personalization.nestEggTagline,
-                    variant: .caption,
-                    color: Theme.mutedText(scheme),
-                    uppercase: true,
-                    tracking: 1.5
-                )
-                BrutalText(text: Personalization.coupleGreeting, variant: .body, bold: true)
-            }
+            BrutalText(text: Personalization.coupleGreeting, variant: .body, bold: true)
 
             HeroStat(
                 label: "FIRE age",

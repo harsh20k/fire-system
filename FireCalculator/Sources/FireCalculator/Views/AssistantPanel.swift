@@ -9,8 +9,9 @@ struct AssistantPanel: View {
     @State private var draft: String = ""
     @State private var dragOffset: CGSize = .zero
     @State private var accumulatedOffset: CGSize = .zero
+    @FocusState private var inputFocused: Bool
 
-    private let panelWidth: CGFloat = 400
+    private let panelWidth: CGFloat = 440
     private let panelHeight: CGFloat = 500
 
     var body: some View {
@@ -25,7 +26,10 @@ struct AssistantPanel: View {
         .background(Theme.surface(scheme))
         .brutalistBorder()
         .offset(dragOffset)
-        .onAppear { controller.loadPersisted(from: store) }
+        .onAppear {
+            controller.loadPersisted(from: store)
+            inputFocused = true
+        }
     }
 
     private var titleBar: some View {
@@ -107,17 +111,30 @@ struct AssistantPanel: View {
 
     private var inputBar: some View {
         VStack(alignment: .trailing, spacing: 12) {
-            TextField("Message the assistant…", text: $draft, axis: .vertical)
-                .lineLimit(1...5)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
-                .frame(minHeight: 56, alignment: .topLeading)
-                .background(Theme.neutral(scheme))
-                .overlay {
-                    RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                        .strokeBorder(Theme.border(scheme), lineWidth: Theme.borderWidth)
+            ZStack(alignment: .topLeading) {
+                if draft.isEmpty {
+                    Text("Message the assistant…")
+                        .font(Theme.Typography.body)
+                        .foregroundStyle(Theme.mutedText(scheme))
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 18)
+                        .allowsHitTesting(false)
                 }
-                .onSubmit(send)
+
+                TextEditor(text: $draft)
+                    .font(Theme.Typography.body)
+                    .foregroundStyle(Theme.ink(scheme))
+                    .scrollContentBackground(.hidden)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
+                    .frame(minHeight: 72, maxHeight: 120)
+                    .focused($inputFocused)
+            }
+            .background(Theme.neutral(scheme))
+            .overlay {
+                RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                    .strokeBorder(Theme.border(scheme), lineWidth: Theme.borderWidth)
+            }
 
             Button { send() } label: {
                 HStack(spacing: 6) {
@@ -130,15 +147,17 @@ struct AssistantPanel: View {
                 .brutalistBorder()
             }
             .buttonStyle(.plain)
-            .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty || controller.isLoading)
+            .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || controller.isLoading)
         }
-        .padding(Theme.Spacing.section)
+        .padding(Theme.Spacing.inline)
     }
 
     private func send() {
-        let text = draft
+        let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
         draft = ""
         Task { await controller.send(text, store: store) }
+        inputFocused = true
     }
 
     @ViewBuilder

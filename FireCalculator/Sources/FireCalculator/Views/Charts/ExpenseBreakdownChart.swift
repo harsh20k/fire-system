@@ -62,6 +62,6 @@ struct ExpenseBreakdownChart: View {
             BrutalText(text: legendText, variant: .caption, color: Theme.mutedText(scheme))
                 .frame(maxWidth: .infinity)
         }
-        .frame(minHeight: 180)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

@@ -5,32 +5,35 @@ struct ResultsPanel: View {
     @Environment(\.colorScheme) private var scheme
     @State private var contentWidth: CGFloat = 1000
 
-    private enum ChartGridLayout {
-        case oneColumn, twoColumn, fourColumn
-
-        init(width: CGFloat) {
-            if width >= 1200 { self = .fourColumn }
-            else if width >= 640 { self = .twoColumn }
-            else { self = .oneColumn }
-        }
-
-        var columnCount: Int {
-            switch self {
-            case .oneColumn: 1
-            case .twoColumn: 2
-            case .fourColumn: 4
-            }
-        }
-    }
-
     var body: some View {
         let r = store.results
         let showReal = store.inputs.showRealDollars
-        let layout = ChartGridLayout(width: contentWidth)
 
         VStack(alignment: .leading, spacing: Theme.Spacing.inline) {
-            chartsGrid(results: r, showReal: showReal, layout: layout)
-                .frame(maxHeight: .infinity)
+            header
+
+            GeometryReader { geo in
+                let tileWidth = geo.size.width * 0.5
+                let tileHeight = geo.size.height
+
+                ScrollView(.horizontal, showsIndicators: true) {
+                    HStack(alignment: .top, spacing: Theme.Spacing.inline) {
+                        chartTile("Portfolio", width: tileWidth, height: tileHeight) {
+                            PortfolioPathChart(results: r, showReal: showReal)
+                        }
+                        chartTile("Breakdown", width: tileWidth, height: tileHeight) {
+                            ExpenseBreakdownChart(results: r)
+                        }
+                        chartTile("Income vs Spend", width: tileWidth, height: tileHeight) {
+                            IncomeVsExpenseChart(results: r)
+                        }
+                        chartTile("Pension Bridge", width: tileWidth, height: tileHeight) {
+                            PensionBridgeChart(inputs: store.inputs, results: r)
+                        }
+                }
+                .padding(.vertical, 2)
+            }
+            .frame(maxHeight: .infinity)
 
             HStack(spacing: Theme.Spacing.inline) {
                 detailRow("Take-home", Fmt.annualWithMonthly(r.currentTakeHome))
@@ -43,6 +46,7 @@ struct ResultsPanel: View {
                 variant: .caption,
                 color: Theme.mutedText(scheme)
             )
+            .lineLimit(2)
         }
         .padding(.horizontal, Theme.Spacing.screen)
         .padding(.vertical, Theme.Spacing.inline)
@@ -56,32 +60,28 @@ struct ResultsPanel: View {
         )
     }
 
-    @ViewBuilder
-    private func chartsGrid(results: FireResults, showReal: Bool, layout: ChartGridLayout) -> some View {
-        let columns = Array(
-            repeating: GridItem(.flexible(), spacing: Theme.Spacing.inline, alignment: .top),
-            count: layout.columnCount
-        )
-
-        LazyVGrid(columns: columns, alignment: .leading, spacing: Theme.Spacing.inline) {
-            chartTile("Portfolio") {
-                PortfolioPathChart(results: results, showReal: showReal)
-            }
-            chartTile("Breakdown") {
-                ExpenseBreakdownChart(results: results)
-            }
-            chartTile("Income vs Spend") {
-                IncomeVsExpenseChart(results: results)
-            }
-            chartTile("Pension Bridge") {
-                PensionBridgeChart(inputs: store.inputs, results: results)
-            }
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            BrutalText(
+                text: Personalization.nestEggTagline,
+                variant: .caption,
+                color: Theme.mutedText(scheme),
+                uppercase: true,
+                tracking: 1.5
+            )
+            BrutalText(
+                text: Personalization.headerSubtitle,
+                variant: .caption,
+                color: Theme.mutedText(scheme)
+            )
+            .lineLimit(1)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     private func chartTile<Content: View>(
         _ title: String,
+        width: CGFloat,
+        height: CGFloat,
         @ViewBuilder content: () -> Content
     ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -98,7 +98,7 @@ struct ResultsPanel: View {
                 .background(Theme.neutral(scheme))
                 .brutalistBorder()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(width: width, height: height, alignment: .topLeading)
     }
 
     private func detailRow(_ label: String, _ value: String) -> some View {

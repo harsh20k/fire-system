@@ -58,11 +58,11 @@ struct FireSlider: View {
             .background(trackBackground)
             .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
             #if os(macOS)
-            .background(
+            .overlay {
                 ScrollWheelCapture(isActive: isHovered) { delta in
                     applyScrollDelta(delta)
                 }
-            )
+            }
             .onContinuousHover { phase in
                 switch phase {
                 case .active:
