@@ -26,7 +26,7 @@ struct BrutalButton: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .padding(.horizontal, 20)
-            .background(background)
+            .background { background }
             .brutalistBorder(pressed: pressed)
         }
         .buttonStyle(.plain)
@@ -37,9 +37,10 @@ struct BrutalButton: View {
         }, perform: {})
     }
 
-    private var background: Color {
+    @ViewBuilder
+    private var background: some View {
         switch variant {
-        case .primary: Theme.primary
+        case .primary: Theme.primaryGradient
         case .secondary: Theme.surface(scheme)
         }
     }

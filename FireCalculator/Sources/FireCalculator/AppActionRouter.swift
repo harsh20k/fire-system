@@ -3,7 +3,6 @@ import Observation
 import SwiftUI
 
 enum AppAction: String, CaseIterable, Identifiable {
-    case commandPalette
     case checkpoints
     case history
     case exportPDF
@@ -17,7 +16,6 @@ enum AppAction: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .commandPalette: "Command Palette"
         case .checkpoints: "Checkpoints"
         case .history: "Change History"
         case .exportPDF: "Export PDF"
@@ -31,7 +29,6 @@ enum AppAction: String, CaseIterable, Identifiable {
 
     var systemImage: String {
         switch self {
-        case .commandPalette: "command"
         case .checkpoints: "clock.arrow.circlepath"
         case .history: "chart.xyaxis.line"
         case .exportPDF: "square.and.arrow.up"
@@ -41,19 +38,6 @@ enum AppAction: String, CaseIterable, Identifiable {
         case .settings: "gearshape"
         case .closeSheet: "xmark"
         }
-    }
-
-    var paletteSection: String {
-        switch self {
-        case .commandPalette: "Tools"
-        case .checkpoints, .history, .assistant, .settings: "Navigate"
-        case .exportPDF, .shareData, .importData: "Export"
-        case .closeSheet: "Tools"
-        }
-    }
-
-    var showsInPalette: Bool {
-        self != .closeSheet
     }
 }
 
@@ -69,14 +53,13 @@ struct AppShortcut {
 enum AppShortcutRegistry {
     static func shortcut(for action: AppAction) -> AppShortcut? {
         switch action {
-        case .commandPalette: AppShortcut(key: "k", modifiers: .command)
-        case .checkpoints: AppShortcut(key: "c", modifiers: [.command, .shift])
-        case .history: AppShortcut(key: "h", modifiers: [.command, .shift])
-        case .exportPDF: AppShortcut(key: "e", modifiers: .command)
-        case .shareData: AppShortcut(key: "e", modifiers: [.command, .shift])
-        case .importData: AppShortcut(key: "i", modifiers: [.command, .shift])
-        case .assistant: AppShortcut(key: "j", modifiers: .command)
-        case .settings: AppShortcut(key: ",", modifiers: .command)
+        case .checkpoints: AppShortcut(key: "c", modifiers: [])
+        case .history: AppShortcut(key: "h", modifiers: [])
+        case .exportPDF: AppShortcut(key: "e", modifiers: [])
+        case .shareData: AppShortcut(key: "s", modifiers: [])
+        case .importData: AppShortcut(key: "i", modifiers: [])
+        case .assistant: AppShortcut(key: "j", modifiers: [])
+        case .settings: AppShortcut(key: "k", modifiers: [])
         case .closeSheet: AppShortcut(key: .escape, modifiers: [])
         }
     }
@@ -84,14 +67,13 @@ enum AppShortcutRegistry {
     static var toolbarActions: [AppAction] {
         [.checkpoints, .history, .exportPDF, .shareData, .importData, .assistant, .settings]
     }
-
-    static var paletteActions: [AppAction] {
-        AppAction.allCases.filter(\.showsInPalette)
-    }
 }
 
 enum ShortcutDisplay {
     static func format(key: KeyEquivalent, modifiers: EventModifiers) -> String {
+        guard !modifiers.isEmpty else {
+            return symbol(for: key)
+        }
         var parts: [String] = []
         if modifiers.contains(.control) { parts.append("⌃") }
         if modifiers.contains(.option) { parts.append("⌥") }
@@ -107,9 +89,6 @@ enum ShortcutDisplay {
         case "\r", "\n": return "↩"
         case Character(UnicodeScalar(27)!): return "Esc"
         default:
-            if let scalar = key.character.unicodeScalars.first, CharacterSet.letters.contains(scalar) {
-                return String(key.character).uppercased()
-            }
             return String(key.character).uppercased()
         }
     }

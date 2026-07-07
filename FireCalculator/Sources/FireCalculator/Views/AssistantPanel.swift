@@ -10,8 +10,8 @@ struct AssistantPanel: View {
     @State private var dragOffset: CGSize = .zero
     @State private var accumulatedOffset: CGSize = .zero
 
-    private let panelWidth: CGFloat = 360
-    private let panelHeight: CGFloat = 480
+    private let panelWidth: CGFloat = 400
+    private let panelHeight: CGFloat = 500
 
     var body: some View {
         VStack(spacing: 0) {
@@ -106,26 +106,33 @@ struct AssistantPanel: View {
     }
 
     private var inputBar: some View {
-        HStack(alignment: .bottom, spacing: 12) {
+        VStack(alignment: .trailing, spacing: 12) {
             TextField("Message the assistant…", text: $draft, axis: .vertical)
-                .textFieldStyle(.roundedBorder)
-                .lineLimit(1...4)
-                .frame(minHeight: 44)
-                .padding(.vertical, 8)
+                .lineLimit(1...5)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .frame(minHeight: 56, alignment: .topLeading)
+                .background(Theme.neutral(scheme))
+                .overlay {
+                    RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                        .strokeBorder(Theme.border(scheme), lineWidth: Theme.borderWidth)
+                }
                 .onSubmit(send)
+
             Button { send() } label: {
-                Image(systemName: "arrow.up")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(.white)
-                    .padding(10)
-                    .background(Theme.primary)
-                    .brutalistBorder()
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.up")
+                    BrutalText(text: "Send", variant: .caption, bold: true, color: .white, uppercase: true)
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .background(Theme.primaryGradient)
+                .brutalistBorder()
             }
             .buttonStyle(.plain)
             .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty || controller.isLoading)
         }
-        .padding(.horizontal, Theme.Spacing.inline)
-        .padding(.vertical, Theme.Spacing.card)
+        .padding(Theme.Spacing.section)
     }
 
     private func send() {
@@ -143,16 +150,17 @@ struct AssistantPanel: View {
                 variant: .body,
                 color: message.role == "user" ? .white : Theme.ink(scheme)
             )
-            .padding(10)
-            .background(bubbleColor(for: message.role))
+            .padding(12)
+            .background { bubbleBackground(for: message.role) }
             .brutalistBorder()
             if message.role != "user" { Spacer(minLength: 30) }
         }
     }
 
-    private func bubbleColor(for role: String) -> Color {
+    @ViewBuilder
+    private func bubbleBackground(for role: String) -> some View {
         switch role {
-        case "user": Theme.primary
+        case "user": Theme.primaryGradient
         case "system": Theme.accent.opacity(0.15)
         default: Theme.neutral(scheme)
         }

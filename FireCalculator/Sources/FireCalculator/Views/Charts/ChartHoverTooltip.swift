@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Styled tooltip card for chart hover selections — brutalist bordered block.
 struct ChartHoverCard<Content: View>: View {
     @Environment(\.colorScheme) private var scheme
     @ViewBuilder var content: Content
@@ -9,8 +8,9 @@ struct ChartHoverCard<Content: View>: View {
         VStack(alignment: .leading, spacing: 4) {
             content
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(minWidth: 140, alignment: .leading)
         .background(Theme.surface(scheme))
         .brutalistBorder()
     }
@@ -28,6 +28,53 @@ struct ChartHoverRow: View {
             Spacer(minLength: 12)
             BrutalText(text: value, variant: .caption, bold: true, color: accent ?? Theme.ink(scheme))
         }
+    }
+}
+
+/// Tracks pointer inside chart overlay and positions tooltip near cursor.
+struct ChartCursorOverlay<Content: View>: View {
+    @State private var hoverPoint: CGPoint?
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .topLeading) {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onContinuousHover { phase in
+                        switch phase {
+                        case .active(let point):
+                            hoverPoint = point
+                        case .ended:
+                            hoverPoint = nil
+                        }
+                    }
+
+                if hoverPoint != nil {
+                    let pos = clampedPosition(
+                        cursor: hoverPoint!,
+                        tooltipSize: CGSize(width: 160, height: 80),
+                        in: geo.size
+                    )
+                    content()
+                        .position(x: pos.x, y: pos.y)
+                }
+            }
+        }
+    }
+
+    private func clampedPosition(cursor: CGPoint, tooltipSize: CGSize, in size: CGSize) -> CGPoint {
+        var x = cursor.x + 16
+        var y = cursor.y + 12
+        if x + tooltipSize.width / 2 > size.width {
+            x = cursor.x - tooltipSize.width / 2 - 8
+        }
+        if y + tooltipSize.height / 2 > size.height {
+            y = cursor.y - tooltipSize.height / 2 - 8
+        }
+        x = max(tooltipSize.width / 2 + 4, min(x, size.width - tooltipSize.width / 2 - 4))
+        y = max(tooltipSize.height / 2 + 4, min(y, size.height - tooltipSize.height / 2 - 4))
+        return CGPoint(x: x, y: y)
     }
 }
 

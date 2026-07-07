@@ -28,7 +28,7 @@ struct FireCalculatorApp: App {
                 .environment(store)
                 .environment(themeManager)
                 .environment(actionRouter)
-                .preferredColorScheme(.light)
+                .preferredColorScheme(themeManager.colorScheme)
                 .id(themeManager.appearanceID)
         }
         .modelContainer(sharedModelContainer)
@@ -39,6 +39,7 @@ struct FireCalculatorApp: App {
 
         Settings {
             SettingsView()
+                .environment(themeManager)
         }
     }
 }

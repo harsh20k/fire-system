@@ -1,8 +1,6 @@
 import SwiftUI
 import Charts
 
-/// Annual contribution to the portfolio over time — shows how the savings gap
-/// (take-home minus inflated expenses) grows as raises/promotions compound.
 struct IncomeVsExpenseChart: View {
     @Environment(\.colorScheme) private var scheme
     let results: FireResults
@@ -49,25 +47,24 @@ struct IncomeVsExpenseChart: View {
             }
         }
         .chartXSelection(value: $selectedAge)
-        .chartOverlay(alignment: .bottomLeading) { _ in
-            if let selectedAge, let point = points.nearest(by: \.age, to: selectedAge) {
-                ChartHoverCard {
-                    ChartHoverRow(label: "Age", value: Fmt.age(point.age))
-                    ChartHoverRow(label: "Contribution", value: Fmt.money(point.nominalContribution))
-                    if point.pensionIncomeAnnual > 0 {
-                        ChartHoverRow(label: "CPP + OAS", value: Fmt.money(point.pensionIncomeAnnual), accent: Theme.ochre)
+        .chartOverlay { _ in
+            ChartCursorOverlay {
+                if let selectedAge, let point = points.nearest(by: \.age, to: selectedAge) {
+                    ChartHoverCard {
+                        ChartHoverRow(label: "Age", value: Fmt.age(point.age))
+                        ChartHoverRow(label: "Contribution", value: Fmt.money(point.nominalContribution))
+                        if point.pensionIncomeAnnual > 0 {
+                            ChartHoverRow(label: "CPP + OAS", value: Fmt.money(point.pensionIncomeAnnual), accent: Theme.ochre)
+                        }
                     }
                 }
-                .padding(8)
             }
         }
         .chartLegend(position: .bottom)
-        .frame(height: 200)
+        .frame(minHeight: 180)
     }
 }
 
-/// Visualizes the CPP/OAS pension bridge: how much of retirement spend is covered by
-/// government pensions vs the portfolio, once the household starts drawing at 60/65.
 struct PensionBridgeChart: View {
     @Environment(\.colorScheme) private var scheme
     let inputs: FireInputs
@@ -95,7 +92,7 @@ struct PensionBridgeChart: View {
     var body: some View {
         if results.fireAge == nil {
             BrutalText(text: "Reach FIRE within the 60-year horizon to preview the pension bridge.", variant: .body, color: Theme.mutedText(scheme))
-                .frame(height: 160)
+                .frame(minHeight: 160)
         } else {
             Chart {
                 ForEach(rows) { row in
@@ -131,19 +128,20 @@ struct PensionBridgeChart: View {
                 }
             }
             .chartXSelection(value: $selectedAge)
-            .chartOverlay(alignment: .bottomLeading) { _ in
-                if let selectedAge, let row = rows.nearest(by: \.age, to: selectedAge) {
-                    ChartHoverCard {
-                        ChartHoverRow(label: "Age", value: Fmt.age(row.age))
-                        ChartHoverRow(label: "Portfolio draw", value: Fmt.money(row.portfolioDraw), accent: Theme.primary)
-                        ChartHoverRow(label: "CPP + OAS", value: Fmt.money(row.pension), accent: Theme.ochre)
-                        ChartHoverRow(label: "Total spend", value: Fmt.money(row.pension + row.portfolioDraw))
+            .chartOverlay { _ in
+                ChartCursorOverlay {
+                    if let selectedAge, let row = rows.nearest(by: \.age, to: selectedAge) {
+                        ChartHoverCard {
+                            ChartHoverRow(label: "Age", value: Fmt.age(row.age))
+                            ChartHoverRow(label: "Portfolio draw", value: Fmt.money(row.portfolioDraw), accent: Theme.primary)
+                            ChartHoverRow(label: "CPP + OAS", value: Fmt.money(row.pension), accent: Theme.ochre)
+                            ChartHoverRow(label: "Total spend", value: Fmt.money(row.pension + row.portfolioDraw))
+                        }
                     }
-                    .padding(8)
                 }
             }
             .chartLegend(position: .bottom)
-            .frame(height: 200)
+            .frame(minHeight: 180)
         }
     }
 }

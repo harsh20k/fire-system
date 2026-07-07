@@ -4,28 +4,25 @@ struct FireCalculatorCommands: Commands {
     @Bindable var router: AppActionRouter
 
     var body: some Commands {
-        CommandGroup(replacing: .newItem) {
-            Button("Command Palette…") { router.perform(.commandPalette) }
-                .keyboardShortcut("k", modifiers: .command)
-        }
-
         CommandMenu("Plan") {
             Button("Checkpoints…") { router.perform(.checkpoints) }
-                .keyboardShortcut("c", modifiers: [.command, .shift])
+                .keyboardShortcut("c", modifiers: [])
             Button("Change History…") { router.perform(.history) }
-                .keyboardShortcut("h", modifiers: [.command, .shift])
+                .keyboardShortcut("h", modifiers: [])
             Divider()
             Button("Export PDF…") { router.perform(.exportPDF) }
-                .keyboardShortcut("e", modifiers: .command)
+                .keyboardShortcut("e", modifiers: [])
             Button("Share Data…") { router.perform(.shareData) }
-                .keyboardShortcut("e", modifiers: [.command, .shift])
+                .keyboardShortcut("s", modifiers: [])
             Button("Import Data…") { router.perform(.importData) }
-                .keyboardShortcut("i", modifiers: [.command, .shift])
+                .keyboardShortcut("i", modifiers: [])
         }
 
         CommandGroup(after: .appSettings) {
             Button("FIRE Co-pilot") { router.perform(.assistant) }
-                .keyboardShortcut("j", modifiers: .command)
+                .keyboardShortcut("j", modifiers: [])
+            Button("Settings…") { router.perform(.settings) }
+                .keyboardShortcut("k", modifiers: [])
         }
     }
 }

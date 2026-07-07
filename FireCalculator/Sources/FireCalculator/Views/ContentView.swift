@@ -6,30 +6,24 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(AppStore.self) private var store
     @Environment(AppActionRouter.self) private var router
+    @Environment(ThemeManager.self) private var themeManager
 
     @State private var showCheckpoints = false
     @State private var showHistory = false
     @State private var showSettings = false
     @State private var showAssistant = false
     @State private var showExport = false
-    @State private var showCommandPalette = false
     @State private var showImportDialog = false
     @State private var pendingImport: FirePlanBundle?
     @State private var importError: String?
 
     private enum SectionGridLayout {
-        case oneColumn
-        case twoColumn
-        case fourColumn
+        case oneColumn, twoColumn, fourColumn
 
         init(width: CGFloat) {
-            if width >= 1200 {
-                self = .fourColumn
-            } else if width >= 640 {
-                self = .twoColumn
-            } else {
-                self = .oneColumn
-            }
+            if width >= 1200 { self = .fourColumn }
+            else if width >= 640 { self = .twoColumn }
+            else { self = .oneColumn }
         }
 
         var columnCount: Int {
@@ -43,39 +37,24 @@ struct ContentView: View {
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            VStack(spacing: 0) {
-                VStack(spacing: Theme.Spacing.section) {
-                    header
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, Theme.Spacing.screen)
-
-                    ResultsPanel()
-                }
-                .padding(.top, Theme.Spacing.screen)
-                .padding(.bottom, Theme.Spacing.inline)
+            HStack(spacing: 0) {
+                HeroSidebar()
 
                 Rectangle()
                     .fill(Theme.border(scheme))
-                    .frame(height: Theme.borderWidth)
+                    .frame(width: Theme.borderWidth)
 
                 GeometryReader { outer in
-                    let layout = SectionGridLayout(width: outer.size.width)
-                    ScrollView {
-                        LazyVGrid(
-                            columns: Array(
-                                repeating: GridItem(.flexible(), spacing: Theme.Spacing.section),
-                                count: layout.columnCount
-                            ),
-                            alignment: .leading,
-                            spacing: Theme.Spacing.section
-                        ) {
-                            TargetSection().id("target-section")
-                            HomeSection().id("home-section")
-                            HouseholdSection().id("household-section")
-                            ExpensesSection().id("expenses-section")
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(Theme.Spacing.screen)
+                    VStack(spacing: 0) {
+                        ResultsPanel()
+                            .frame(height: outer.size.height * 0.5)
+
+                        Rectangle()
+                            .fill(Theme.border(scheme))
+                            .frame(height: Theme.borderWidth)
+
+                        sliderGrid(width: outer.size.width)
+                            .frame(height: outer.size.height * 0.5)
                     }
                 }
             }
@@ -86,11 +65,6 @@ struct ContentView: View {
                     .padding(Theme.Spacing.screen)
                     .transition(.scale(scale: 0.92, anchor: .bottomTrailing).combined(with: .opacity))
                     .zIndex(1)
-            }
-
-            if showCommandPalette {
-                CommandPalette(isPresented: $showCommandPalette, onSelect: handleAction)
-                    .zIndex(2)
             }
 
             if showImportDialog, let bundle = pendingImport {
@@ -121,7 +95,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showCheckpoints) { CheckpointsView() }
         .sheet(isPresented: $showHistory) { HistoryView() }
-        .sheet(isPresented: $showSettings) { SettingsView() }
+        .sheet(isPresented: $showSettings) {
+            SettingsView().environment(themeManager)
+        }
         .sheet(isPresented: $showExport) { ExportPreviewView() }
         .alert("Import Failed", isPresented: Binding(
             get: { importError != nil },
@@ -139,63 +115,62 @@ struct ContentView: View {
         }
         .background {
             Group {
-                paletteShortcutButton
                 checkpointsShortcutButton
                 historyShortcutButton
                 exportPDFShortcutButton
                 shareDataShortcutButton
                 importDataShortcutButton
                 assistantShortcutButton
+                settingsShortcutButton
             }
             .frame(width: 0, height: 0)
             .opacity(0)
         }
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.inline / 2) {
-            BrutalText(
-                text: Personalization.nestEggTagline,
-                variant: .caption,
-                color: Theme.mutedText(scheme),
-                uppercase: true,
-                tracking: 2
-            )
-            BrutalText(text: Personalization.coupleGreeting, variant: .title)
-            BrutalText(
-                text: Personalization.headerSubtitle,
-                variant: .body,
-                color: Theme.mutedText(scheme)
-            )
+    @ViewBuilder
+    private func sliderGrid(width: CGFloat) -> some View {
+        let layout = SectionGridLayout(width: width)
+        ScrollView {
+            LazyVGrid(
+                columns: Array(
+                    repeating: GridItem(.flexible(), spacing: Theme.Spacing.section, alignment: .top),
+                    count: layout.columnCount
+                ),
+                alignment: .leading,
+                spacing: Theme.Spacing.section
+            ) {
+                sectionCard { TargetSection().id("target-section") }
+                sectionCard { HomeSection().id("home-section") }
+                sectionCard { HouseholdSection().id("household-section") }
+                sectionCard { ExpensesSection().id("expenses-section") }
+            }
+            .padding(Theme.Spacing.screen)
         }
+    }
+
+    private func sectionCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        content()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     private func handleAction(_ action: AppAction) {
         switch action {
-        case .commandPalette:
-            showCommandPalette = true
-        case .checkpoints:
-            showCheckpoints = true
-        case .history:
-            showHistory = true
-        case .exportPDF:
-            showExport = true
-        case .shareData:
-            DataPlanExporter.export(bundle: store.exportBundle())
-        case .importData:
-            beginImport()
+        case .checkpoints: showCheckpoints = true
+        case .history: showHistory = true
+        case .exportPDF: showExport = true
+        case .shareData: DataPlanExporter.export(bundle: store.exportBundle())
+        case .importData: beginImport()
         case .assistant:
             withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) {
                 showAssistant.toggle()
             }
-        case .settings:
-            showSettings = true
+        case .settings: showSettings = true
         case .closeSheet:
             showCheckpoints = false
             showHistory = false
             showSettings = false
             showExport = false
-            showCommandPalette = false
             showAssistant = false
         }
     }
@@ -234,10 +209,6 @@ struct ContentView: View {
         }
     }
 
-    private var paletteShortcutButton: some View {
-        hiddenShortcut(.commandPalette) { showCommandPalette = true }
-    }
-
     private var checkpointsShortcutButton: some View {
         hiddenShortcut(.checkpoints) { showCheckpoints = true }
     }
@@ -265,11 +236,16 @@ struct ContentView: View {
             }
         }
     }
+
+    private var settingsShortcutButton: some View {
+        hiddenShortcut(.settings) { showSettings = true }
+    }
 }
 
 #Preview {
     ContentView()
         .environment(AppStore())
         .environment(AppActionRouter())
+        .environment(ThemeManager())
         .modelContainer(for: [ScenarioState.self, Checkpoint.self, ChangeEvent.self, AssistantMessage.self], inMemory: true)
 }
