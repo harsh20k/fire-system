@@ -47,18 +47,28 @@ struct IncomeVsExpenseChart: View {
             }
         }
         .chartXSelection(value: $selectedAge)
-        .chartOverlay { _ in
-            ChartCursorOverlay {
-                if let selectedAge, let point = points.nearest(by: \.age, to: selectedAge) {
-                    ChartHoverCard {
-                        ChartHoverRow(label: "Age", value: Fmt.age(point.age))
-                        ChartHoverRow(label: "Contribution", value: Fmt.money(point.nominalContribution))
-                        if point.pensionIncomeAnnual > 0 {
-                            ChartHoverRow(label: "CPP + OAS", value: Fmt.money(point.pensionIncomeAnnual), accent: Theme.ochre)
+        .chartOverlay { proxy in
+            GeometryReader { geo in
+                if let plotAnchor = proxy.plotFrame {
+                    let plotFrame = geo[plotAnchor]
+                    if let selectedAge,
+                       let point = points.nearest(by: \.age, to: selectedAge),
+                       let xPos = proxy.position(forX: point.age) {
+                        let yPos = proxy.position(forY: point.nominalContribution) ?? plotFrame.height / 2
+                        let anchor = CGPoint(x: plotFrame.origin.x + xPos, y: plotFrame.origin.y + yPos)
+                        ChartCursorOverlay(anchor: anchor, bounds: geo.size) {
+                            ChartHoverCard {
+                                ChartHoverRow(label: "Age", value: Fmt.age(point.age))
+                                ChartHoverRow(label: "Contribution", value: Fmt.money(point.nominalContribution))
+                                if point.pensionIncomeAnnual > 0 {
+                                    ChartHoverRow(label: "CPP + OAS", value: Fmt.money(point.pensionIncomeAnnual), accent: Theme.ochre)
+                                }
+                            }
                         }
                     }
                 }
             }
+            .allowsHitTesting(false)
         }
         .chartLegend(position: .bottom)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -128,17 +138,28 @@ struct PensionBridgeChart: View {
                 }
             }
             .chartXSelection(value: $selectedAge)
-            .chartOverlay { _ in
-                ChartCursorOverlay {
-                    if let selectedAge, let row = rows.nearest(by: \.age, to: selectedAge) {
-                        ChartHoverCard {
-                            ChartHoverRow(label: "Age", value: Fmt.age(row.age))
-                            ChartHoverRow(label: "Portfolio draw", value: Fmt.money(row.portfolioDraw), accent: Theme.primary)
-                            ChartHoverRow(label: "CPP + OAS", value: Fmt.money(row.pension), accent: Theme.ochre)
-                            ChartHoverRow(label: "Total spend", value: Fmt.money(row.pension + row.portfolioDraw))
+            .chartOverlay { proxy in
+                GeometryReader { geo in
+                    if let plotAnchor = proxy.plotFrame {
+                        let plotFrame = geo[plotAnchor]
+                        if let selectedAge,
+                           let row = rows.nearest(by: \.age, to: selectedAge),
+                           let xPos = proxy.position(forX: row.age) {
+                            let total = row.pension + row.portfolioDraw
+                            let yPos = proxy.position(forY: total) ?? plotFrame.height / 2
+                            let anchor = CGPoint(x: plotFrame.origin.x + xPos, y: plotFrame.origin.y + yPos)
+                            ChartCursorOverlay(anchor: anchor, bounds: geo.size) {
+                                ChartHoverCard {
+                                    ChartHoverRow(label: "Age", value: Fmt.age(row.age))
+                                    ChartHoverRow(label: "Portfolio draw", value: Fmt.money(row.portfolioDraw), accent: Theme.primary)
+                                    ChartHoverRow(label: "CPP + OAS", value: Fmt.money(row.pension), accent: Theme.ochre)
+                                    ChartHoverRow(label: "Total spend", value: Fmt.money(total))
+                                }
+                            }
                         }
                     }
                 }
+                .allowsHitTesting(false)
             }
             .chartLegend(position: .bottom)
             .frame(maxWidth: .infinity, maxHeight: .infinity)

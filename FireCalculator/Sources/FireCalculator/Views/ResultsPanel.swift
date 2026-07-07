@@ -30,8 +30,10 @@ struct ResultsPanel: View {
                         chartTile("Pension Bridge", width: tileWidth, height: tileHeight) {
                             PensionBridgeChart(inputs: store.inputs, results: r)
                         }
+                    }
+                    .padding(.vertical, 2)
                 }
-                .padding(.vertical, 2)
+                .scrollClipDisabled()
             }
             .frame(maxHeight: .infinity)
 
@@ -62,6 +64,7 @@ struct ResultsPanel: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
+            BrutalText(text: Personalization.coupleGreeting, variant: .body, bold: true)
             BrutalText(
                 text: Personalization.nestEggTagline,
                 variant: .caption,

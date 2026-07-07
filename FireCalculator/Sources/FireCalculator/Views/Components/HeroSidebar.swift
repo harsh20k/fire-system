@@ -13,8 +13,6 @@ struct HeroSidebar: View {
         let savingsRate = savingsRatePercent(r)
 
         VStack(alignment: .leading, spacing: Theme.Spacing.inline) {
-            BrutalText(text: Personalization.coupleGreeting, variant: .body, bold: true)
-
             HeroStat(
                 label: "FIRE age",
                 value: ageValue,

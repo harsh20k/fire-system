@@ -99,6 +99,7 @@ final class AppActionRouter {
     private(set) var pendingAction: AppAction?
     private(set) var actionTick = 0
     var pendingImportBundle: FirePlanBundle?
+    var suppressShortcuts = false
 
     func perform(_ action: AppAction) {
         pendingAction = action

@@ -107,7 +107,13 @@ struct ContentView: View {
         } message: {
             Text(importError ?? "")
         }
-        .onAppear { store.attach(context: modelContext) }
+        .onAppear {
+            store.attach(context: modelContext)
+            router.suppressShortcuts = showAssistant
+        }
+        .onChange(of: showAssistant) { _, isOpen in
+            router.suppressShortcuts = isOpen
+        }
         .onChange(of: router.actionTick) { _, _ in
             if let action = router.consumeAction() {
                 handleAction(action)
@@ -207,7 +213,11 @@ struct ContentView: View {
     private func hiddenShortcut(_ action: AppAction, perform: @escaping () -> Void) -> some View {
         if let shortcut = AppShortcutRegistry.shortcut(for: action) {
             Button(action: perform) { EmptyView() }
-                .keyboardShortcut(shortcut.key, modifiers: shortcut.modifiers)
+                .modifier(ConditionalKeyboardShortcut(
+                    key: shortcut.key,
+                    modifiers: shortcut.modifiers,
+                    enabled: !router.suppressShortcuts
+                ))
         }
     }
 

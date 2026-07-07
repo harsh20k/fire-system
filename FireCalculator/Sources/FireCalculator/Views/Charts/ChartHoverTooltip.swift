@@ -31,46 +31,33 @@ struct ChartHoverRow: View {
     }
 }
 
-/// Tracks pointer inside chart overlay and positions tooltip near cursor.
+/// Positions chart tooltip from plot-space anchor; does not intercept pointer events.
 struct ChartCursorOverlay<Content: View>: View {
-    @State private var hoverPoint: CGPoint?
+    let anchor: CGPoint?
+    let bounds: CGSize
     @ViewBuilder var content: () -> Content
 
     var body: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .topLeading) {
-                Color.clear
-                    .contentShape(Rectangle())
-                    .onContinuousHover { phase in
-                        switch phase {
-                        case .active(let point):
-                            hoverPoint = point
-                        case .ended:
-                            hoverPoint = nil
-                        }
-                    }
-
-                if hoverPoint != nil {
-                    let pos = clampedPosition(
-                        cursor: hoverPoint!,
-                        tooltipSize: CGSize(width: 160, height: 80),
-                        in: geo.size
-                    )
-                    content()
-                        .position(x: pos.x, y: pos.y)
-                }
-            }
+        if let anchor {
+            let pos = clampedPosition(
+                anchor: anchor,
+                tooltipSize: CGSize(width: 160, height: 80),
+                in: bounds
+            )
+            content()
+                .position(x: pos.x, y: pos.y)
+                .zIndex(1)
         }
     }
 
-    private func clampedPosition(cursor: CGPoint, tooltipSize: CGSize, in size: CGSize) -> CGPoint {
-        var x = cursor.x + 16
-        var y = cursor.y + 12
+    private func clampedPosition(anchor: CGPoint, tooltipSize: CGSize, in size: CGSize) -> CGPoint {
+        var x = anchor.x + 16
+        var y = anchor.y - 24
         if x + tooltipSize.width / 2 > size.width {
-            x = cursor.x - tooltipSize.width / 2 - 8
+            x = anchor.x - tooltipSize.width / 2 - 8
         }
-        if y + tooltipSize.height / 2 > size.height {
-            y = cursor.y - tooltipSize.height / 2 - 8
+        if y - tooltipSize.height / 2 < 0 {
+            y = anchor.y + tooltipSize.height / 2 + 12
         }
         x = max(tooltipSize.width / 2 + 4, min(x, size.width - tooltipSize.width / 2 - 4))
         y = max(tooltipSize.height / 2 + 4, min(y, size.height - tooltipSize.height / 2 - 4))

@@ -47,15 +47,25 @@ struct ExpenseBreakdownChart: View {
             ])
             .chartLegend(.hidden)
             .chartAngleSelection(value: $selectedAmount)
-            .chartOverlay { _ in
-                ChartCursorOverlay {
-                    if let slice = selectedSlice, total > 0 {
-                        ChartHoverCard {
-                            ChartHoverRow(label: slice.name, value: Fmt.money(slice.amount))
-                            ChartHoverRow(label: "Share", value: Fmt.percent(slice.amount / total * 100))
+            .chartOverlay { proxy in
+                GeometryReader { geo in
+                    if let plotAnchor = proxy.plotFrame {
+                        let plotFrame = geo[plotAnchor]
+                        if let slice = selectedSlice, total > 0 {
+                            let anchor = CGPoint(
+                                x: plotFrame.midX,
+                                y: plotFrame.midY
+                            )
+                            ChartCursorOverlay(anchor: anchor, bounds: geo.size) {
+                                ChartHoverCard {
+                                    ChartHoverRow(label: slice.name, value: Fmt.money(slice.amount))
+                                    ChartHoverRow(label: "Share", value: Fmt.percent(slice.amount / total * 100))
+                                }
+                            }
                         }
                     }
                 }
+                .allowsHitTesting(false)
             }
             .frame(maxHeight: .infinity)
 

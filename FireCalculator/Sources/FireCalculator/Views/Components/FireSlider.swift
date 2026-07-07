@@ -15,8 +15,12 @@ struct FireSlider: View {
     @State private var dragStartValue: Double? = nil
     @State private var isHovered = false
 
-    private var sliderTint: Color { Theme.ink(scheme).opacity(scheme == .dark ? 0.85 : 0.72) }
-    private var trackBackground: Color { Theme.mutedText(scheme).opacity(0.18) }
+    private var sliderTint: Color {
+        scheme == .dark ? Color(white: 0.45) : Color(white: 0.75)
+    }
+    private var trackBackground: Color {
+        scheme == .dark ? Color(white: 0.28) : Color(white: 0.90)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -84,7 +88,7 @@ struct FireSlider: View {
     private func applyScrollDelta(_ delta: CGFloat) {
         guard delta != 0 else { return }
         let direction = delta > 0 ? 1.0 : -1.0
-        let magnitude = max(1, Int(abs(delta) / 8))
+        let magnitude = min(2, max(1, Int(abs(delta) / 28)))
         let increment = step * Double(magnitude) * direction
         let snapped = snapToStep(value + increment)
         let clamped = min(range.upperBound, max(range.lowerBound, snapped))

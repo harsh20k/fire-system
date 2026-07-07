@@ -5,24 +5,37 @@ struct FireCalculatorCommands: Commands {
 
     var body: some Commands {
         CommandMenu("Plan") {
-            Button("Checkpoints…") { router.perform(.checkpoints) }
-                .keyboardShortcut("c", modifiers: [])
-            Button("Change History…") { router.perform(.history) }
-                .keyboardShortcut("h", modifiers: [])
+            planButton("Checkpoints…", action: .checkpoints, key: "c")
+            planButton("Change History…", action: .history, key: "h")
             Divider()
-            Button("Export PDF…") { router.perform(.exportPDF) }
-                .keyboardShortcut("e", modifiers: [])
-            Button("Share Data…") { router.perform(.shareData) }
-                .keyboardShortcut("s", modifiers: [])
-            Button("Import Data…") { router.perform(.importData) }
-                .keyboardShortcut("i", modifiers: [])
+            planButton("Export PDF…", action: .exportPDF, key: "e")
+            planButton("Share Data…", action: .shareData, key: "s")
+            planButton("Import Data…", action: .importData, key: "i")
         }
 
         CommandGroup(after: .appSettings) {
-            Button("FIRE Co-pilot") { router.perform(.assistant) }
-                .keyboardShortcut("j", modifiers: [])
-            Button("Settings…") { router.perform(.settings) }
-                .keyboardShortcut("k", modifiers: [])
+            planButton("FIRE Co-pilot", action: .assistant, key: "j")
+            planButton("Settings…", action: .settings, key: "k")
+        }
+    }
+
+    @ViewBuilder
+    private func planButton(_ title: String, action: AppAction, key: KeyEquivalent) -> some View {
+        Button(title) { router.perform(action) }
+            .modifier(ConditionalKeyboardShortcut(key: key, modifiers: [], enabled: !router.suppressShortcuts))
+    }
+}
+
+struct ConditionalKeyboardShortcut: ViewModifier {
+    let key: KeyEquivalent
+    let modifiers: EventModifiers
+    let enabled: Bool
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content.keyboardShortcut(key, modifiers: modifiers)
+        } else {
+            content
         }
     }
 }

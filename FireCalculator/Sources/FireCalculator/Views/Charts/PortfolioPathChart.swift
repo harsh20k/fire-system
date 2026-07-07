@@ -50,25 +50,35 @@ struct PortfolioPathChart: View {
             }
         }
         .chartXSelection(value: $selectedAge)
-        .chartOverlay { _ in
-            ChartCursorOverlay {
-                if let selectedAge, let point = results.path.nearest(by: \.age, to: selectedAge) {
-                    let balance = showReal ? point.realBalance : point.nominalBalance
-                    let gap = fireTarget - balance
-                    ChartHoverCard {
-                        ChartHoverRow(label: "Age", value: Fmt.age(point.age))
-                        ChartHoverRow(
-                            label: showReal ? "Balance (real)" : "Balance (nominal)",
-                            value: Fmt.money(balance)
-                        )
-                        if gap > 0 {
-                            ChartHoverRow(label: "To FIRE", value: Fmt.moneyK(gap), accent: Theme.ochre)
-                        } else {
-                            ChartHoverRow(label: "To FIRE", value: "Reached", accent: Theme.primary)
+        .chartOverlay { proxy in
+            GeometryReader { geo in
+                if let plotAnchor = proxy.plotFrame {
+                    let plotFrame = geo[plotAnchor]
+                    if let selectedAge,
+                       let point = results.path.nearest(by: \.age, to: selectedAge),
+                       let xPos = proxy.position(forX: point.age) {
+                        let balance = showReal ? point.realBalance : point.nominalBalance
+                        let gap = fireTarget - balance
+                        let yPos = proxy.position(forY: balance) ?? plotFrame.height / 2
+                        let anchor = CGPoint(x: plotFrame.origin.x + xPos, y: plotFrame.origin.y + yPos)
+                        ChartCursorOverlay(anchor: anchor, bounds: geo.size) {
+                            ChartHoverCard {
+                                ChartHoverRow(label: "Age", value: Fmt.age(point.age))
+                                ChartHoverRow(
+                                    label: showReal ? "Balance (real)" : "Balance (nominal)",
+                                    value: Fmt.money(balance)
+                                )
+                                if gap > 0 {
+                                    ChartHoverRow(label: "To FIRE", value: Fmt.moneyK(gap), accent: Theme.ochre)
+                                } else {
+                                    ChartHoverRow(label: "To FIRE", value: "Reached", accent: Theme.primary)
+                                }
+                            }
                         }
                     }
                 }
             }
+            .allowsHitTesting(false)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

@@ -19,6 +19,7 @@ struct ShortcutBadge: View {
 }
 
 struct ShortcutToolbarButton: View {
+    @Environment(AppActionRouter.self) private var router
     let title: String
     let systemImage: String
     let shortcut: AppShortcut?
@@ -34,11 +35,12 @@ struct ShortcutToolbarButton: View {
             }
             .help(title + (shortcut.map { " (\($0.displayString))" } ?? ""))
         }
-        .applyShortcut(shortcut)
+        .applyShortcut(shortcut, enabled: !router.suppressShortcuts)
     }
 }
 
 struct ShortcutLabeledButton: View {
+    @Environment(AppActionRouter.self) private var router
     let title: String
     let shortcut: AppShortcut?
     let variant: BrutalButtonVariant
@@ -51,15 +53,15 @@ struct ShortcutLabeledButton: View {
                 ShortcutBadge(text: shortcut.displayString)
             }
         }
-        .applyShortcut(shortcut, action: action)
+        .applyShortcut(shortcut, enabled: !router.suppressShortcuts, action: action)
     }
 }
 
 private extension View {
     @ViewBuilder
-    func applyShortcut(_ shortcut: AppShortcut?, action: (() -> Void)? = nil) -> some View {
+    func applyShortcut(_ shortcut: AppShortcut?, enabled: Bool = true, action: (() -> Void)? = nil) -> some View {
         if let shortcut {
-            self.keyboardShortcut(shortcut.key, modifiers: shortcut.modifiers)
+            modifier(ConditionalKeyboardShortcut(key: shortcut.key, modifiers: shortcut.modifiers, enabled: enabled))
         } else {
             self
         }
