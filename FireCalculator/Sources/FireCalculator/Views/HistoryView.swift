@@ -1,8 +1,6 @@
 import SwiftUI
 import Charts
 
-/// Long-term change tracking: a chronological log of every slider edit, plus a
-/// per-field chart showing how a chosen value evolved over time.
 struct HistoryView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(AppStore.self) private var store
@@ -11,8 +9,8 @@ struct HistoryView: View {
     @State private var selectedField: String = "income"
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Change History").font(Theme.serifTitle).font(.title2)
+        VStack(alignment: .leading, spacing: Theme.Spacing.inline) {
+            BrutalText(text: "Change History", variant: .title)
 
             Picker("Field", selection: $selectedField) {
                 ForEach(FireInputs.fieldKeys, id: \.self) { key in
@@ -22,53 +20,67 @@ struct HistoryView: View {
             .frame(width: 260)
             .onChange(of: selectedField) { refresh() }
 
-            let fieldHistory = store.history(for: selectedField)
-            if fieldHistory.isEmpty {
-                Text("No recorded changes for \(selectedField) yet.")
-                    .font(.callout).foregroundStyle(.secondary)
-                    .frame(height: 160)
-            } else {
-                Chart(fieldHistory) { event in
-                    LineMark(x: .value("Time", event.timestamp), y: .value("Value", event.newValue))
-                        .foregroundStyle(Theme.pine)
-                        .symbol(Circle())
+            BrutalCard {
+                let fieldHistory = store.history(for: selectedField)
+                if fieldHistory.isEmpty {
+                    BrutalText(text: "No recorded changes for \(selectedField) yet.", variant: .body, color: Theme.mutedText(scheme))
+                        .frame(height: 160)
+                } else {
+                    Chart(fieldHistory) { event in
+                        LineMark(x: .value("Time", event.timestamp), y: .value("Value", event.newValue))
+                            .foregroundStyle(Theme.primary)
+                            .lineStyle(StrokeStyle(lineWidth: 2))
+                            .symbol(Circle())
+                    }
+                    .frame(height: 180)
                 }
-                .frame(height: 180)
             }
 
-            Divider()
+            BrutalText(text: "All changes", variant: .body, bold: true)
 
-            Text("All changes").font(.headline)
             if events.isEmpty {
                 ContentUnavailableView("No changes yet", systemImage: "clock", description: Text(Personalization.historyEmpty))
             } else {
-                List(events) { event in
-                    HStack {
-                        Image(systemName: event.source == "assistant" ? "sparkles" : "hand.point.up.left")
-                            .foregroundStyle(event.source == "assistant" ? Theme.slate : Theme.mutedText(scheme))
-                        VStack(alignment: .leading) {
-                            Text(event.fieldKey).font(.system(.body, design: .monospaced))
-                            Text("\(String(format: "%.1f", event.oldValue)) → \(String(format: "%.1f", event.newValue))")
-                                .font(.caption).foregroundStyle(.secondary)
+                ScrollView {
+                    VStack(spacing: Theme.Spacing.inline) {
+                        ForEach(events) { event in
+                            BrutalCard {
+                                HStack {
+                                    Image(systemName: event.source == "assistant" ? "sparkles" : "hand.point.up.left")
+                                        .foregroundStyle(event.source == "assistant" ? Theme.slate : Theme.mutedText(scheme))
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        BrutalText(text: event.fieldKey, variant: .body, bold: true)
+                                        BrutalText(
+                                            text: "\(String(format: "%.1f", event.oldValue)) → \(String(format: "%.1f", event.newValue))",
+                                            variant: .caption,
+                                            color: Theme.mutedText(scheme)
+                                        )
+                                    }
+                                    Spacer()
+                                    BrutalText(
+                                        text: event.timestamp.formatted(date: .abbreviated, time: .shortened),
+                                        variant: .caption,
+                                        color: Theme.mutedText(scheme)
+                                    )
+                                }
+                            }
                         }
-                        Spacer()
-                        Text(event.timestamp.formatted(date: .abbreviated, time: .shortened))
-                            .font(.caption2).foregroundStyle(.secondary)
                     }
                 }
-                .listStyle(.inset)
             }
 
             Spacer()
             HStack {
                 Spacer()
-                Button("Done") { dismiss() }
+                BrutalButton(title: "Done", variant: .secondary) { dismiss() }
+                    .frame(width: 140)
             }
         }
-        .padding(24)
+        .padding(Theme.Spacing.screen)
         .frame(minWidth: 520, minHeight: 520)
-        .background(Theme.paper(scheme))
+        .background(Theme.neutral(scheme))
         .onAppear(perform: refresh)
+        .onExitCommand { dismiss() }
     }
 
     private func refresh() {

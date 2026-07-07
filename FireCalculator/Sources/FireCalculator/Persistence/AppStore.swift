@@ -145,6 +145,80 @@ final class AppStore {
         return (try? context.fetch(descriptor)) ?? []
     }
 
+    func allChangeEvents() -> [ChangeEvent] {
+        guard let context = modelContext else { return [] }
+        let descriptor = FetchDescriptor<ChangeEvent>(sortBy: [SortDescriptor(\.timestamp)])
+        return (try? context.fetch(descriptor)) ?? []
+    }
+
+    // MARK: - Plan export / import
+
+    func exportBundle() -> FirePlanBundle {
+        FirePlanBundle(
+            scenario: inputs,
+            checkpoints: allCheckpoints(),
+            changeEvents: allChangeEvents(),
+            assistantMessages: allMessages()
+        )
+    }
+
+    func importBundle(_ bundle: FirePlanBundle, mode: ImportMode) throws {
+        guard bundle.isSupported else {
+            throw FirePlanBundleError.unsupportedVersion(bundle.formatVersion)
+        }
+
+        guard let context = modelContext else { return }
+
+        if mode == .replace {
+            clearAllData(in: context)
+            insertBundle(bundle, in: context, merge: false)
+        } else {
+            insertBundle(bundle, in: context, merge: true)
+        }
+
+        inputs = bundle.scenario
+        persistScenario()
+        try context.save()
+    }
+
+    private func clearAllData(in context: ModelContext) {
+        for state in (try? context.fetch(FetchDescriptor<ScenarioState>())) ?? [] {
+            context.delete(state)
+        }
+        for checkpoint in (try? context.fetch(FetchDescriptor<Checkpoint>())) ?? [] {
+            context.delete(checkpoint)
+        }
+        for event in (try? context.fetch(FetchDescriptor<ChangeEvent>())) ?? [] {
+            context.delete(event)
+        }
+        for message in (try? context.fetch(FetchDescriptor<AssistantMessage>())) ?? [] {
+            context.delete(message)
+        }
+    }
+
+    private func insertBundle(_ bundle: FirePlanBundle, in context: ModelContext, merge: Bool) {
+        let existingCheckpointIDs = Set(allCheckpoints().map(\.id))
+        let existingEventIDs = Set(allChangeEvents().map(\.id))
+        let existingMessageIDs = Set(allMessages().map(\.id))
+
+        if !merge {
+            let state = ScenarioState(inputs: bundle.scenario)
+            context.insert(state)
+        }
+
+        for dto in bundle.checkpoints where !merge || !existingCheckpointIDs.contains(dto.id) {
+            context.insert(Checkpoint(id: dto.id, name: dto.name, note: dto.note, createdAt: dto.createdAt, inputs: dto.inputs))
+        }
+
+        for dto in bundle.changeEvents where !merge || !existingEventIDs.contains(dto.id) {
+            context.insert(ChangeEvent(id: dto.id, timestamp: dto.timestamp, fieldKey: dto.fieldKey, oldValue: dto.oldValue, newValue: dto.newValue, source: dto.source))
+        }
+
+        for dto in bundle.assistantMessages where !merge || !existingMessageIDs.contains(dto.id) {
+            context.insert(AssistantMessage(id: dto.id, timestamp: dto.timestamp, role: dto.role, text: dto.text))
+        }
+    }
+
     // MARK: - Slider bindings
 
     /// Produces a `Binding<Double>` for a given writable field on `inputs`, plus a matching

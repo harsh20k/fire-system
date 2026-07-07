@@ -5,6 +5,7 @@ import SwiftData
 struct FireCalculatorApp: App {
     @State private var store = AppStore()
     @State private var themeManager = ThemeManager()
+    @State private var actionRouter = AppActionRouter()
 
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -26,15 +27,18 @@ struct FireCalculatorApp: App {
             ContentView()
                 .environment(store)
                 .environment(themeManager)
+                .environment(actionRouter)
+                .preferredColorScheme(.light)
                 .id(themeManager.appearanceID)
         }
         .modelContainer(sharedModelContainer)
         .defaultSize(width: 1280, height: 900)
+        .commands {
+            FireCalculatorCommands(router: actionRouter)
+        }
 
         Settings {
             SettingsView()
-                .environment(themeManager)
-                .id(themeManager.appearanceID)
         }
     }
 }

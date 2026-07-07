@@ -16,19 +16,18 @@ struct PortfolioPathChart: View {
             ForEach(results.path) { point in
                 let balance = showReal ? point.realBalance : point.nominalBalance
                 LineMark(x: .value("Age", point.age), y: .value("Balance", balance))
-                    .foregroundStyle(Theme.pine)
+                    .foregroundStyle(Theme.primary)
+                    .lineStyle(StrokeStyle(lineWidth: 2))
                     .interpolationMethod(.monotone)
                 AreaMark(x: .value("Age", point.age), y: .value("Balance", balance))
-                    .foregroundStyle(Theme.pine.opacity(0.10))
+                    .foregroundStyle(Theme.primary.opacity(0.12))
                     .interpolationMethod(.monotone)
             }
             RuleMark(y: .value("FIRE number", fireTarget))
                 .foregroundStyle(Theme.ochre)
-                .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
+                .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 4]))
                 .annotation(position: .top, alignment: .trailing) {
-                    Text("FIRE: \(Fmt.moneyK(fireTarget))")
-                        .font(Theme.monoSmall)
-                        .foregroundStyle(Theme.ochre)
+                    BrutalText(text: "FIRE: \(Fmt.moneyK(fireTarget))", variant: .caption, color: Theme.ochre)
                 }
             if let selectedAge, let point = results.path.nearest(by: \.age, to: selectedAge) {
                 RuleMark(x: .value("Selected", point.age))
@@ -70,7 +69,7 @@ struct PortfolioPathChart: View {
                     if gap > 0 {
                         ChartHoverRow(label: "To FIRE", value: Fmt.moneyK(gap), accent: Theme.ochre)
                     } else {
-                        ChartHoverRow(label: "To FIRE", value: "Reached", accent: Theme.pine)
+                        ChartHoverRow(label: "To FIRE", value: "Reached", accent: Theme.primary)
                     }
                 }
                 .padding(8)

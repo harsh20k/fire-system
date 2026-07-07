@@ -39,6 +39,14 @@ final class Checkpoint {
         self.inputsJSON = (try? JSONEncoder().encode(inputs)) ?? Data()
     }
 
+    init(id: UUID, name: String, note: String, createdAt: Date, inputs: FireInputs) {
+        self.id = id
+        self.name = name
+        self.note = note
+        self.createdAt = createdAt
+        self.inputsJSON = (try? JSONEncoder().encode(inputs)) ?? Data()
+    }
+
     var inputs: FireInputs {
         (try? JSONDecoder().decode(FireInputs.self, from: inputsJSON)) ?? .default
     }
@@ -63,6 +71,15 @@ final class ChangeEvent {
         self.newValue = newValue
         self.source = source
     }
+
+    init(id: UUID, timestamp: Date, fieldKey: String, oldValue: Double, newValue: Double, source: String) {
+        self.id = id
+        self.timestamp = timestamp
+        self.fieldKey = fieldKey
+        self.oldValue = oldValue
+        self.newValue = newValue
+        self.source = source
+    }
 }
 
 /// A single chat turn with the Gemini assistant, persisted so the conversation survives relaunches.
@@ -76,6 +93,13 @@ final class AssistantMessage {
     init(role: String, text: String) {
         self.id = UUID()
         self.timestamp = .now
+        self.role = role
+        self.text = text
+    }
+
+    init(id: UUID, timestamp: Date, role: String, text: String) {
+        self.id = id
+        self.timestamp = timestamp
         self.role = role
         self.text = text
     }

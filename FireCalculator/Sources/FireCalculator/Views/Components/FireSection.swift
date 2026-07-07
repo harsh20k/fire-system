@@ -1,7 +1,6 @@
 import SwiftUI
 
-/// Collapsible glass-card section, mirroring the original prototype's numbered sections
-/// (Target, Home, Household & Income, Expenses).
+/// Collapsible brutalist section (Target, Home, Household, Expenses).
 struct FireSection<Content: View>: View {
     @Environment(\.colorScheme) private var scheme
     let number: String
@@ -13,24 +12,28 @@ struct FireSection<Content: View>: View {
     @ViewBuilder var content: Content
 
     var body: some View {
-        GlassPaperCard(accent: accent, padding: 20) {
+        BrutalCard(accent: accent) {
             VStack(alignment: .leading, spacing: 0) {
                 Button {
                     withAnimation(.easeInOut(duration: 0.15)) { open.toggle() }
                 } label: {
                     HStack(spacing: 10) {
-                        Text("\(number) — \(title)")
-                            .font(Theme.mono)
-                            .foregroundStyle(accent)
-                            .textCase(.uppercase)
-                            .tracking(1.2)
+                        BrutalText(
+                            text: "\(number) — \(title)",
+                            variant: .sectionLabel,
+                            color: accent,
+                            uppercase: true,
+                            tracking: 1.2
+                        )
                         Spacer(minLength: 8)
                         if !open, let summary {
-                            Text(summary)
-                                .font(Theme.mono)
-                                .foregroundStyle(Theme.mutedText(scheme))
-                                .lineLimit(1)
-                                .truncationMode(.tail)
+                            BrutalText(
+                                text: summary,
+                                variant: .caption,
+                                color: Theme.mutedText(scheme)
+                            )
+                            .lineLimit(1)
+                            .truncationMode(.tail)
                         }
                         Image(systemName: "chevron.down")
                             .font(.system(size: 11, weight: .semibold))
@@ -40,9 +43,8 @@ struct FireSection<Content: View>: View {
                     }
                     .contentShape(Rectangle())
                     .padding(.vertical, 8)
-                    .padding(.horizontal, -8)
                     .background(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        RoundedRectangle(cornerRadius: Theme.cornerRadius)
                             .fill(accent.opacity(headerHovered ? 0.08 : 0))
                     )
                 }
@@ -53,7 +55,7 @@ struct FireSection<Content: View>: View {
                     VStack(alignment: .leading, spacing: 0) {
                         content
                     }
-                    .padding(.top, 16)
+                    .padding(.top, Theme.Spacing.inline)
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
@@ -67,15 +69,17 @@ struct FireSubHead: View {
     let accent: Color
 
     var body: some View {
-        Text(label)
-            .font(Theme.monoSmall)
-            .textCase(.uppercase)
-            .tracking(1)
-            .foregroundStyle(accent)
-            .padding(.leading, 10)
-            .overlay(alignment: .leading) {
-                Rectangle().fill(accent).frame(width: 2)
-            }
-            .padding(.vertical, 12)
+        BrutalText(
+            text: label,
+            variant: .caption,
+            color: accent,
+            uppercase: true,
+            tracking: 1
+        )
+        .padding(.leading, 10)
+        .overlay(alignment: .leading) {
+            Rectangle().fill(accent).frame(width: 3)
+        }
+        .padding(.vertical, 12)
     }
 }

@@ -94,8 +94,7 @@ struct PensionBridgeChart: View {
 
     var body: some View {
         if results.fireAge == nil {
-            Text("Reach FIRE within the 60-year horizon to preview the pension bridge.")
-                .font(.callout).foregroundStyle(.secondary)
+            BrutalText(text: "Reach FIRE within the 60-year horizon to preview the pension bridge.", variant: .body, color: Theme.mutedText(scheme))
                 .frame(height: 160)
         } else {
             Chart {
@@ -112,8 +111,8 @@ struct PensionBridgeChart: View {
                 }
             }
             .chartForegroundStyleScale([
-                "Portfolio draw": Theme.pine.opacity(0.55),
-                "CPP + OAS": Theme.ochre.opacity(0.75),
+                "Portfolio draw": Theme.primary.opacity(0.7),
+                "CPP + OAS": Theme.ochre.opacity(0.85),
             ])
             .chartYAxis {
                 AxisMarks { value in
@@ -136,7 +135,7 @@ struct PensionBridgeChart: View {
                 if let selectedAge, let row = rows.nearest(by: \.age, to: selectedAge) {
                     ChartHoverCard {
                         ChartHoverRow(label: "Age", value: Fmt.age(row.age))
-                        ChartHoverRow(label: "Portfolio draw", value: Fmt.money(row.portfolioDraw), accent: Theme.pine)
+                        ChartHoverRow(label: "Portfolio draw", value: Fmt.money(row.portfolioDraw), accent: Theme.primary)
                         ChartHoverRow(label: "CPP + OAS", value: Fmt.money(row.pension), accent: Theme.ochre)
                         ChartHoverRow(label: "Total spend", value: Fmt.money(row.pension + row.portfolioDraw))
                     }

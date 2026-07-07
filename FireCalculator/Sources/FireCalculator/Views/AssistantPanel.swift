@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// Floating HUD chat panel: converse with Gemini, which can also directly move sliders
-/// via function calling (visibly confirmed with a 🎚️ message).
 struct AssistantPanel: View {
     @Binding var isPresented: Bool
 
@@ -11,95 +9,57 @@ struct AssistantPanel: View {
     @State private var draft: String = ""
     @State private var dragOffset: CGSize = .zero
     @State private var accumulatedOffset: CGSize = .zero
-    @State private var headerGlow = false
 
-    private let panelWidth: CGFloat = 340
-    private let panelHeight: CGFloat = 460
-    private let cornerRadius: CGFloat = 16
+    private let panelWidth: CGFloat = 360
+    private let panelHeight: CGFloat = 480
 
     var body: some View {
         VStack(spacing: 0) {
             titleBar
-            Divider().opacity(0.5)
+            Rectangle().fill(Theme.border(scheme)).frame(height: Theme.borderWidth)
             chatArea
-            Divider().opacity(0.5)
+            Rectangle().fill(Theme.border(scheme)).frame(height: Theme.borderWidth)
             inputBar
         }
         .frame(width: panelWidth, height: panelHeight)
-        .background(Theme.card(scheme).opacity(0.35))
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .strokeBorder(Theme.hairline(scheme), lineWidth: 1)
-        }
-        .overlay {
-            if controller.isLoading {
-                ShimmerBorder(cornerRadius: cornerRadius)
-            }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-        .shadow(color: .black.opacity(scheme == .dark ? 0.45 : 0.18), radius: 24, y: 10)
+        .background(Theme.surface(scheme))
+        .brutalistBorder()
         .offset(dragOffset)
         .onAppear { controller.loadPersisted(from: store) }
-        .onChange(of: controller.isLoading) { _, loading in
-            if loading {
-                withAnimation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true)) {
-                    headerGlow = true
-                }
-            } else {
-                headerGlow = false
-            }
-        }
     }
 
-    // MARK: - Title bar (drag handle)
-
     private var titleBar: some View {
-        ZStack {
+        HStack(spacing: 8) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Theme.primary)
+                .symbolEffect(.pulse, options: .repeating, isActive: controller.isLoading)
+
+            BrutalText(text: Personalization.assistantTitle, variant: .body, bold: true)
+
+            Spacer()
+
             if controller.isLoading {
-                Ellipse()
-                    .fill(
-                        RadialGradient(
-                            colors: [Theme.pine.opacity(0.35), Theme.pine.opacity(0)],
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: 80
-                        )
-                    )
-                    .frame(height: 44)
-                    .blur(radius: 12)
-                    .opacity(headerGlow ? 1 : 0.35)
-                    .allowsHitTesting(false)
+                ProgressView().controlSize(.small)
             }
 
-            HStack(spacing: 8) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Theme.pine)
-                    .symbolEffect(.pulse, options: .repeating, isActive: controller.isLoading)
-
-                Text(Personalization.assistantTitle)
-                    .font(.system(.subheadline, design: .serif))
-                    .fontWeight(.semibold)
-                    .foregroundStyle(Theme.ink(scheme))
-
-                Spacer()
-
-                Button {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                        isPresented = false
-                    }
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 16))
-                        .foregroundStyle(Theme.mutedText(scheme).opacity(0.7))
+            Button {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                    isPresented = false
                 }
-                .buttonStyle(.plain)
-                .help("Close assistant")
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Theme.ink(scheme))
+                    .padding(6)
+                    .background(Theme.neutral(scheme))
+                    .brutalistBorder()
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
+            .buttonStyle(.plain)
+            .help("Close assistant")
         }
+        .padding(.horizontal, Theme.Spacing.inline)
+        .padding(.vertical, 12)
         .contentShape(Rectangle())
         .gesture(dragGesture)
     }
@@ -117,16 +77,12 @@ struct AssistantPanel: View {
             }
     }
 
-    // MARK: - Chat
-
     private var chatArea: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
                     if controller.messages.isEmpty {
-                        Text(Personalization.assistantWelcome)
-                            .font(.system(.footnote, design: .serif))
-                            .foregroundStyle(Theme.mutedText(scheme))
+                        BrutalText(text: Personalization.assistantWelcome, variant: .caption, color: Theme.mutedText(scheme))
                     }
                     ForEach(controller.messages) { message in
                         bubble(message)
@@ -134,15 +90,12 @@ struct AssistantPanel: View {
                     }
                     if controller.isLoading {
                         HStack(spacing: 6) {
-                            ProgressView()
-                                .controlSize(.small)
-                            Text("Thinking…")
-                                .font(.system(.caption, design: .serif))
-                                .foregroundStyle(Theme.mutedText(scheme))
+                            ProgressView().controlSize(.small)
+                            BrutalText(text: "Thinking…", variant: .caption, color: Theme.mutedText(scheme))
                         }
                     }
                 }
-                .padding(14)
+                .padding(Theme.Spacing.inline)
             }
             .onChange(of: controller.messages) {
                 if let last = controller.messages.last {
@@ -153,21 +106,26 @@ struct AssistantPanel: View {
     }
 
     private var inputBar: some View {
-        HStack(spacing: 8) {
+        HStack(alignment: .bottom, spacing: 12) {
             TextField("Message the assistant…", text: $draft, axis: .vertical)
                 .textFieldStyle(.roundedBorder)
                 .lineLimit(1...4)
+                .frame(minHeight: 44)
+                .padding(.vertical, 8)
                 .onSubmit(send)
-            Button {
-                send()
-            } label: {
-                Image(systemName: "arrow.up.circle.fill").font(.title2)
+            Button { send() } label: {
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.white)
+                    .padding(10)
+                    .background(Theme.primary)
+                    .brutalistBorder()
             }
             .buttonStyle(.plain)
-            .tint(Theme.pine)
             .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty || controller.isLoading)
         }
-        .padding(12)
+        .padding(.horizontal, Theme.Spacing.inline)
+        .padding(.vertical, Theme.Spacing.card)
     }
 
     private func send() {
@@ -180,57 +138,30 @@ struct AssistantPanel: View {
     private func bubble(_ message: ChatMessage) -> some View {
         HStack {
             if message.role == "user" { Spacer(minLength: 30) }
-            Text(message.text)
-                .font(.system(.callout, design: .serif))
-                .padding(10)
-                .background(bubbleColor(for: message.role))
-                .foregroundStyle(message.role == "user" ? .white : Theme.ink(scheme))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+            BrutalText(
+                text: message.text,
+                variant: .body,
+                color: message.role == "user" ? .white : Theme.ink(scheme)
+            )
+            .padding(10)
+            .background(bubbleColor(for: message.role))
+            .brutalistBorder()
             if message.role != "user" { Spacer(minLength: 30) }
         }
     }
 
     private func bubbleColor(for role: String) -> Color {
         switch role {
-        case "user": return Theme.pine
-        case "system": return Theme.brick.opacity(0.15)
-        default: return Theme.card(scheme)
+        case "user": Theme.primary
+        case "system": Theme.accent.opacity(0.15)
+        default: Theme.neutral(scheme)
         }
-    }
-}
-
-// MARK: - Loading shimmer border
-
-private struct ShimmerBorder: View {
-    var cornerRadius: CGFloat
-
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
-            let cycle = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 2.5) / 2.5
-            let angle = Angle.degrees(cycle * 360)
-
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .strokeBorder(
-                    AngularGradient(
-                        colors: [
-                            Theme.pine.opacity(0.12),
-                            Theme.pine.opacity(0.75),
-                            Theme.slate.opacity(0.45),
-                            Theme.pine.opacity(0.12),
-                        ],
-                        center: .center,
-                        angle: angle
-                    ),
-                    lineWidth: 1.5
-                )
-        }
-        .allowsHitTesting(false)
     }
 }
 
 #Preview {
     ZStack(alignment: .bottomTrailing) {
-        Theme.paper(.light).ignoresSafeArea()
+        Theme.neutral(.light).ignoresSafeArea()
         AssistantPanel(isPresented: .constant(true))
             .padding(24)
     }

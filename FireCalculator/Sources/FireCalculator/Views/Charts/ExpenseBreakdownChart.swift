@@ -30,9 +30,9 @@ struct ExpenseBreakdownChart: View {
 
     var body: some View {
         Chart(slices) { slice in
-            SectorMark(angle: .value("Amount", slice.amount), innerRadius: .ratio(0.62), angularInset: 1.5)
+            SectorMark(angle: .value("Amount", slice.amount), innerRadius: .ratio(0.62), angularInset: 2)
                 .foregroundStyle(by: .value("Category", slice.name))
-                .cornerRadius(3)
+                .cornerRadius(0)
         }
         .chartForegroundStyleScale([
             "Mortgage": Theme.ochre, "Needs": Theme.brick, "Wants": Theme.slate,

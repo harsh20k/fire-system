@@ -3,8 +3,6 @@ import PDFKit
 import AppKit
 
 enum ReportExporter {
-    /// Renders the given SwiftUI report into a single-page-per-section PDF using ImageRenderer,
-    /// then writes it to disk via a save panel.
     @MainActor
     static func exportPDF(inputs: FireInputs, results: FireResults) {
         let report = ReportView(inputs: inputs, results: results)
@@ -29,30 +27,35 @@ enum ReportExporter {
     }
 }
 
-/// Sheet that previews the report and offers the export action.
 struct ExportPreviewView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text(Personalization.exportPreviewTitle).font(.title2.bold())
+                BrutalText(text: Personalization.exportPreviewTitle, variant: .title)
                 Spacer()
-                Button("Export as PDF…") {
+                ShortcutLabeledButton(
+                    title: "Export PDF",
+                    shortcut: AppShortcutRegistry.shortcut(for: .exportPDF),
+                    variant: .primary
+                ) {
                     ReportExporter.exportPDF(inputs: store.inputs, results: store.results)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Theme.pine)
-                Button("Close") { dismiss() }
+                BrutalButton(title: "Close", variant: .secondary) { dismiss() }
+                    .frame(width: 120)
             }
-            .padding()
+            .padding(Theme.Spacing.screen)
 
             ScrollView {
                 ReportView(inputs: store.inputs, results: store.results)
-                    .padding()
+                    .padding(Theme.Spacing.screen)
             }
         }
         .frame(minWidth: 760, minHeight: 700)
+        .background(Theme.neutral(scheme))
+        .onExitCommand { dismiss() }
     }
 }

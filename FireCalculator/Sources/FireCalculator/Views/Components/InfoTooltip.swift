@@ -1,8 +1,6 @@
 import SwiftUI
 
-/// A small "i" affordance that shows a short hover hint via `.help()` and a fuller
-/// explanation in a popover on click — attached to every slider and every derived
-/// calculated statistic so the user always knows how a number was produced.
+/// A small "i" affordance with brutalist popover styling.
 struct InfoTooltip: View {
     @Environment(\.colorScheme) private var scheme
     let text: String
@@ -14,29 +12,25 @@ struct InfoTooltip: View {
             showPopover.toggle()
         } label: {
             Image(systemName: "info.circle")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(Theme.mutedText(scheme))
         }
         .buttonStyle(.plain)
         .help(text)
         .popover(isPresented: $showPopover, arrowEdge: .top) {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 if let title {
-                    Text(title)
-                        .font(.system(.subheadline, design: .serif)).bold()
+                    BrutalText(text: title, variant: .body, bold: true)
                 }
-                Text(text)
-                    .font(.system(.footnote, design: .serif))
-                    .foregroundStyle(.secondary)
+                BrutalText(text: text, variant: .caption, color: Theme.mutedText(scheme))
             }
-            .padding(14)
-            .frame(width: 260, alignment: .leading)
+            .padding(Theme.Spacing.inline)
+            .frame(width: 280, alignment: .leading)
             .fixedSize(horizontal: false, vertical: true)
         }
     }
 }
 
-/// Attaches an `InfoTooltip` after a label, used inline in slider rows and stat headers.
 struct TooltipLabel: View {
     let label: String
     let tip: String?

@@ -3,7 +3,7 @@ import Foundation
 /// Edit these two lines — the rest of the app picks them up automatically.
 enum Personalization {
     static let person1 = "Harsh"
-    static let person2 = "Priya" // Edit with your wife's name if different
+    static let person2 = "Suman" // Edit with your wife's name if different
 
     static var coupleNames: String { "\(person1) & \(person2)" }
 
