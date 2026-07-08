@@ -120,10 +120,15 @@ enum FireCalculationEngine {
         results.downPayment = downPayment
         results.monthlyMortgagePayment = monthlyPayment
 
+        let buyYear = Int(inputs.homeBuyYearsFromNow.rounded())
+        let mortgageStartYear = buyYear == 0 ? 1 : buyYear
+        let mortgageEndYear = mortgageStartYear + Int(inputs.amort) - 1
+
         let (needs0, wants0) = livingExpenses(inputs: inputs, yearsFromNow: 0)
         results.needsMonthly = needs0
         results.wantsMonthly = wants0
-        results.totalMonthlyExpenses = monthlyPayment + needs0 + wants0
+        let currentMortgage = buyYear == 0 ? monthlyPayment : 0
+        results.totalMonthlyExpenses = currentMortgage + needs0 + wants0
         results.workingExpensesAnnual = results.totalMonthlyExpenses * 12
 
         let taxRate = estimatedTaxRate(householdIncome: inputs.income)
@@ -139,7 +144,7 @@ enum FireCalculationEngine {
         results.fireNumberReal = results.fireNumberNominal // updated per-year below once fireAge is known
 
         var currentIncome = inputs.income
-        var balance = max(0, inputs.savings - downPayment)
+        var balance = buyYear == 0 ? max(0, inputs.savings - downPayment) : inputs.savings
         var years = 0
         var path: [YearPoint] = [YearPoint(year: 0, age: inputs.age, nominalBalance: balance, realBalance: balance, nominalContribution: 0, pensionIncomeAnnual: 0)]
 
@@ -148,6 +153,9 @@ enum FireCalculationEngine {
 
         while years < maxYears {
             years += 1
+            if years == buyYear, buyYear > 0 {
+                balance = max(0, balance - downPayment)
+            }
             currentIncome *= 1 + inputs.raisePct / 100
             if inputs.promoCycle > 0, Int(inputs.promoCycle) > 0, years % Int(inputs.promoCycle) == 0 {
                 currentIncome *= 1 + inputs.promoBumpPct / 100
@@ -156,7 +164,7 @@ enum FireCalculationEngine {
             let takeHome = currentIncome * (1 - yearTaxRate)
 
             let (needsY, wantsY) = livingExpenses(inputs: inputs, yearsFromNow: years)
-            let mortgageStillActive = years <= Int(inputs.amort)
+            let mortgageStillActive = years >= mortgageStartYear && years <= mortgageEndYear
             let annualMortgage = mortgageStillActive ? monthlyPayment * 12 : 0
             let workingExpensesThisYear = (needsY + wantsY) * 12 + annualMortgage
 

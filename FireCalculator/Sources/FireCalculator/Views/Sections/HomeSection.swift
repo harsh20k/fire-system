@@ -5,8 +5,16 @@ struct HomeSection: View {
 
     var body: some View {
         let i = store.inputs
+        let buySummary = i.homeBuyYearsFromNow == 0 ? "buy now" : "buy in \(Int(i.homeBuyYearsFromNow)) yrs"
         FireSection(number: "02", title: "Home", accent: Theme.ochre,
-                    summary: "\(Fmt.moneyK(i.homePrice)) · \(Fmt.percent(i.downPct, decimals: 0)) down · \(String(format: "%.1f", i.mortgageRate))% rate") {
+                    summary: "\(buySummary) · \(Fmt.moneyK(i.homePrice)) · \(Fmt.percent(i.downPct, decimals: 0)) down · \(String(format: "%.1f", i.mortgageRate))% rate") {
+
+            FireSlider(label: "When we buy home",
+                       tip: "Years from today until you close on the home. Delaying the purchase keeps your full savings invested longer and postpones the down payment and mortgage — but you still carry rent or other housing costs in Needs/Wants until then.",
+                       systemImage: "calendar.badge.clock",
+                       value: store.binding(\.homeBuyYearsFromNow, field: "homeBuyYearsFromNow"),
+                       range: 0...15, step: 1, format: { $0 == 0 ? "Now" : Fmt.years($0) },
+                       onCommit: { store.commitChange(field: "homeBuyYearsFromNow", from: $0, to: $1) })
 
             FireSlider(label: "Home price",
                        tip: "Nova Scotia home prices range roughly $500k-$1M by area. Buying lower frees more cash to invest instead of servicing a mortgage.",
@@ -38,10 +46,10 @@ struct HomeSection: View {
 
             HStack {
                 StatView(label: "Down payment", value: Fmt.money(store.results.downPayment),
-                          tip: "Home price × down payment %. Deducted from your current savings at the start of the simulation.")
+                          tip: "Home price × down payment %. Deducted from savings when you buy — at the start of the simulation if buying now, or in the purchase year if delayed.")
                 Spacer()
                 StatView(label: "Monthly payment", value: Fmt.money(store.results.monthlyMortgagePayment),
-                          tip: "Standard amortizing mortgage formula: M = P × r / (1 − (1+r)^−n), where P is the loan principal after your down payment, r is the monthly rate, and n is the number of monthly payments over your amortization.",
+                          tip: "Standard amortizing mortgage formula once you own the home. Included in monthly expenses starting in the purchase year and ending after your amortization period.",
                           accent: Theme.ochre)
             }
             .padding(.top, 6)

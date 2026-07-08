@@ -34,7 +34,10 @@ struct FireSlider: View {
                 TooltipLabel(label: label, tip: tip)
                     .font(Theme.Typography.body)
                     .foregroundStyle(Theme.mutedText(scheme))
-                Spacer()
+                Spacer(minLength: 0)
+            }
+            HStack {
+                Spacer(minLength: 0)
                 BrutalText(text: format(value), variant: .body, bold: true)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)

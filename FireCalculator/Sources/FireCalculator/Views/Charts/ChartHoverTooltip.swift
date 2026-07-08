@@ -11,6 +11,7 @@ struct ChartHoverCard<Content: View>: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .frame(minWidth: 140, alignment: .leading)
+        .fixedSize(horizontal: true, vertical: true)
         .background(Theme.surface(scheme))
         .brutalistBorder()
     }
@@ -28,6 +29,7 @@ struct ChartHoverRow: View {
             Spacer(minLength: 12)
             BrutalText(text: value, variant: .caption, bold: true, color: accent ?? Theme.ink(scheme))
         }
+        .fixedSize(horizontal: true, vertical: true)
     }
 }
 
@@ -45,6 +47,7 @@ struct ChartCursorOverlay<Content: View>: View {
                 in: bounds
             )
             content()
+                .fixedSize(horizontal: true, vertical: true)
                 .position(x: pos.x, y: pos.y)
                 .zIndex(1)
         }

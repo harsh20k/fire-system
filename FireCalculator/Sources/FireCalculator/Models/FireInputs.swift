@@ -35,6 +35,8 @@ struct FireInputs: Codable, Equatable, Identifiable {
     var entertainment: Double = 130
 
     // MARK: Home
+    /// Years from today until the home purchase (0 = buy now).
+    var homeBuyYearsFromNow: Double = 0
     var homePrice: Double = 600_000
     var downPct: Double = 10
     var mortgageRate: Double = 4.6
@@ -73,7 +75,7 @@ extension FireInputs {
         "groceries", "utilities", "internetPhone", "numCars", "costPerCar", "rideshare", "medicine",
         "personalCare", "subscriptions", "childcarePerKid",
         "eatingOut", "shoppingTech", "entertainment",
-        "homePrice", "downPct", "mortgageRate", "amort",
+        "homeBuyYearsFromNow", "homePrice", "downPct", "mortgageRate", "amort",
         "growthRate", "withdrawalRate", "annualExpenses",
         "inflationRate", "showRealDollars",
         "pensionBridgeEnabled", "cppMonthlyCombined", "cppStartAge", "oasMonthlyCombined", "oasStartAge", "oasResidencyFactor",
@@ -103,6 +105,7 @@ extension FireInputs {
         "eatingOut": 0...1_200,
         "shoppingTech": 0...1_000,
         "entertainment": 0...600,
+        "homeBuyYearsFromNow": 0...15,
         "homePrice": 400_000...1_000_000,
         "downPct": 5...35,
         "mortgageRate": 2...8,
@@ -154,6 +157,7 @@ extension FireInputs {
         case "eatingOut": copy.eatingOut = value
         case "shoppingTech": copy.shoppingTech = value
         case "entertainment": copy.entertainment = value
+        case "homeBuyYearsFromNow": copy.homeBuyYearsFromNow = value
         case "homePrice": copy.homePrice = value
         case "downPct": copy.downPct = value
         case "mortgageRate": copy.mortgageRate = value

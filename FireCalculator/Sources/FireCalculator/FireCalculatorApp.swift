@@ -24,7 +24,7 @@ struct FireCalculatorApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
                 .environment(store)
                 .environment(themeManager)
                 .environment(actionRouter)

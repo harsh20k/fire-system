@@ -115,7 +115,7 @@ final class GeminiClient: @unchecked Sendable {
     private var setSliderDeclaration: [String: Any] {
         [
             "name": "set_slider",
-            "description": "Sets a FIRE calculator slider/dial to a new numeric value. Field names match the app's input keys (e.g. income, savings, withdrawalRate, growthRate, homePrice, downPct, mortgageRate, amort, raisePct, promoBumpPct, promoCycle, kids, inflationRate, annualExpenses, groceries, eatingOut, etc). Boolean toggles (showRealDollars, pensionBridgeEnabled) use 1 for true and 0 for false.",
+            "description": "Sets a FIRE calculator slider/dial to a new numeric value. Field names match the app's input keys (e.g. income, savings, withdrawalRate, growthRate, homeBuyYearsFromNow, homePrice, downPct, mortgageRate, amort, raisePct, promoBumpPct, promoCycle, kids, inflationRate, annualExpenses, groceries, eatingOut, etc). Boolean toggles (showRealDollars, pensionBridgeEnabled) use 1 for true and 0 for false.",
             "parameters": [
                 "type": "OBJECT",
                 "properties": [
